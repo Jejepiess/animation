@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Mortain Spider!!!</title>
+    <title>Creepy Crawler</title>
     <style>
         body { margin: 0; overflow: hidden; background: black; }
         canvas { display: block; }
@@ -26,7 +26,7 @@
             mouseY = event.clientY;
         });
 
-        // Create smaller background dots
+        // Background dots
         const dots = Array.from({ length: 300 }, () => ({
             x: Math.random() * canvas.width,
             y: Math.random() * canvas.height
@@ -34,12 +34,11 @@
 
         class Tentacle {
             constructor(baseOffset) {
-                this.numSegments = 12;  
-                this.segmentLength = 10;  
+                this.numSegments = 12; // Medium length tentacles
+                this.segmentLength = 15;
                 this.segments = Array.from({ length: this.numSegments }, () => ({ x: 0, y: 0 }));
                 this.baseOffset = baseOffset;
                 this.targetDot = null;
-                this.attached = false;
             }
 
             getClosestDot() {
@@ -61,24 +60,12 @@
                 this.segments[0].x = baseX;
                 this.segments[0].y = baseY;
 
-                // Find the nearest background dot for the tentacle tip
-                if (!this.targetDot || Math.random() < 0.01) {  
-                    this.targetDot = this.getClosestDot();
-                    this.attached = false;
-                }
-
-                let last = this.segments[this.numSegments - 1];
-
+                // Instantly snap the tentacle tip to the nearest dot
+                this.targetDot = this.getClosestDot();
                 if (this.targetDot) {
-                    if (!this.attached) {
-                        last.x += (this.targetDot.x - last.x) * 0.2;
-                        last.y += (this.targetDot.y - last.y) * 0.2;
-                        if (Math.hypot(last.x - this.targetDot.x, last.y - this.targetDot.y) < 3) {
-                            last.x = this.targetDot.x;
-                            last.y = this.targetDot.y;
-                            this.attached = true;
-                        }
-                    }
+                    let last = this.segments[this.numSegments - 1];
+                    last.x = this.targetDot.x;
+                    last.y = this.targetDot.y;
                 }
 
                 for (let i = 1; i < this.numSegments; i++) {
@@ -95,8 +82,8 @@
             }
 
             draw() {
-                ctx.strokeStyle = "rgba(0, 150, 255, 0.7)";
-                ctx.lineWidth = 1;
+                ctx.strokeStyle = "rgba(0, 150, 255, 0.8)";
+                ctx.lineWidth = 2;
                 ctx.beginPath();
                 ctx.moveTo(this.segments[0].x, this.segments[0].y);
                 for (let i = 1; i < this.numSegments; i++) {
@@ -104,11 +91,11 @@
                 }
                 ctx.stroke();
 
-                // Draw the end dot at the tip of the tentacle
+                // Tentacle tip dot
                 ctx.fillStyle = "rgba(255, 255, 255, 1)";
                 let tip = this.segments[this.numSegments - 1];
                 ctx.beginPath();
-                ctx.arc(tip.x, tip.y, 3, 0, Math.PI * 2);
+                ctx.arc(tip.x, tip.y, 4, 0, Math.PI * 2);
                 ctx.fill();
             }
         }
@@ -117,8 +104,8 @@
             constructor() {
                 this.x = canvas.width / 2;
                 this.y = canvas.height / 2;
-                this.speed = 0.07;
-                this.tentacles = Array.from({ length: 12 }, (_, i) => new Tentacle((i / 12) * Math.PI * 2));
+                this.speed = 0.12; // Faster movement
+                this.tentacles = Array.from({ length: 10 }, (_, i) => new Tentacle((i / 10) * Math.PI * 2));
             }
 
             move() {
@@ -144,7 +131,7 @@
             ctx.fillStyle = "rgba(255, 255, 0, 0.8)";
             dots.forEach(dot => {
                 ctx.beginPath();
-                ctx.arc(dot.x, dot.y, 2, 0, Math.PI * 2);
+                ctx.arc(dot.x, dot.y, 3, 0, Math.PI * 2);
                 ctx.fill();
             });
         }
