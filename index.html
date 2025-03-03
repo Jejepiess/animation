@@ -33,10 +33,11 @@
         }));
 
         class Tentacle {
-            constructor() {
-                this.numSegments = 12;
-                this.segmentLength = 25;
+            constructor(baseOffset) {
+                this.numSegments = 10;
+                this.segmentLength = 15;
                 this.segments = Array.from({ length: this.numSegments }, () => ({ x: 0, y: 0 }));
+                this.baseOffset = baseOffset;
                 this.targetDot = null;
                 this.holdingTime = 0;
                 this.maxHoldTime = Math.random() * 60 + 30;
@@ -56,13 +57,16 @@
                 return closest;
             }
 
-            update(baseX, baseY) {
+            update(spiderX, spiderY) {
+                // Attach tentacle to the spider's body
+                let baseX = spiderX + Math.cos(this.baseOffset) * 10;
+                let baseY = spiderY + Math.sin(this.baseOffset) * 10;
                 this.segments[0].x = baseX;
                 this.segments[0].y = baseY;
 
                 this.holdingTime++;
 
-                // If no target dot or it's time to switch, find a new one
+                // If no target dot or time to switch, find a new one
                 if (!this.targetDot || this.holdingTime > this.maxHoldTime) {
                     this.targetDot = this.getClosestDot();
                     this.holdingTime = 0;
@@ -102,7 +106,7 @@
 
             draw() {
                 ctx.strokeStyle = "rgba(255, 255, 255, 0.6)";
-                ctx.lineWidth = 1.2;
+                ctx.lineWidth = 1;
                 ctx.beginPath();
                 ctx.moveTo(this.segments[0].x, this.segments[0].y);
                 for (let i = 1; i < this.numSegments; i++) {
@@ -117,7 +121,7 @@
                 this.x = canvas.width / 2;
                 this.y = canvas.height / 2;
                 this.speed = 0.07;
-                this.tentacles = Array.from({ length: 20 }, () => new Tentacle());
+                this.tentacles = Array.from({ length: 8 }, (_, i) => new Tentacle((i / 8) * Math.PI * 2));
             }
 
             move() {
@@ -128,7 +132,7 @@
             draw() {
                 this.move();
                 ctx.beginPath();
-                ctx.arc(this.x, this.y, 15, 0, Math.PI * 2);
+                ctx.arc(this.x, this.y, 10, 0, Math.PI * 2);
                 ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
                 ctx.fill();
 
