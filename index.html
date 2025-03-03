@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>sperm ni Cenen</title>
+    <title>Spider Crawling Effect</title>
     <style>
         body { margin: 0; overflow: hidden; background: black; }
         canvas { display: block; }
@@ -26,8 +26,8 @@
             mouseY = event.clientY;
         });
 
-        // Generate random dots as anchor points
-        const dots = Array.from({ length: 15 }, () => ({
+        // Generate more dots for better movement
+        const dots = Array.from({ length: 50 }, () => ({
             x: Math.random() * canvas.width,
             y: Math.random() * canvas.height
         }));
@@ -37,14 +37,23 @@
                 this.numSegments = 8;
                 this.segmentLength = 30;
                 this.segments = Array.from({ length: this.numSegments }, () => ({ x: 0, y: 0 }));
-                this.targetDot = dots[Math.floor(Math.random() * dots.length)];
+                this.targetDot = this.getClosestDot();
+            }
+
+            getClosestDot() {
+                return dots.reduce((closest, dot) => {
+                    const d1 = Math.hypot(this.segments[0].x - dot.x, this.segments[0].y - dot.y);
+                    const d2 = Math.hypot(mouseX - dot.x, mouseY - dot.y); 
+                    return d2 < d1 ? dot : closest;
+                }, this.targetDot);
             }
 
             update(baseX, baseY) {
                 this.segments[0].x = baseX;
                 this.segments[0].y = baseY;
 
-                // Move tentacle towards target using Inverse Kinematics
+                this.targetDot = this.getClosestDot();
+
                 for (let i = 1; i < this.numSegments; i++) {
                     let prev = this.segments[i - 1];
                     let seg = this.segments[i];
@@ -57,10 +66,10 @@
                     seg.y = prev.y + Math.sin(angle) * this.segmentLength;
                 }
 
-                // **Force last segment to snap to the dot**
+                // Slowly move the last segment towards the target dot
                 let last = this.segments[this.numSegments - 1];
-                last.x = this.targetDot.x;
-                last.y = this.targetDot.y;
+                last.x += (this.targetDot.x - last.x) * 0.2;
+                last.y += (this.targetDot.y - last.y) * 0.2;
             }
 
             draw() {
@@ -79,7 +88,7 @@
             constructor() {
                 this.x = canvas.width / 2;
                 this.y = canvas.height / 2;
-                this.speed = 0.08;
+                this.speed = 0.05;
                 this.tentacles = Array.from({ length: 8 }, () => new Tentacle());
             }
 
@@ -106,7 +115,7 @@
             ctx.fillStyle = "rgba(255, 255, 0, 0.9)";
             dots.forEach(dot => {
                 ctx.beginPath();
-                ctx.arc(dot.x, dot.y, 6, 0, Math.PI * 2);
+                ctx.arc(dot.x, dot.y, 5, 0, Math.PI * 2);
                 ctx.fill();
             });
         }
@@ -124,4 +133,3 @@
     </script>
 </body>
 </html>
-
