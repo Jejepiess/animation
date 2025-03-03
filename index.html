@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Electric Tentacles</title>
+    <title>Electric Tentacle Spider</title>
     <style>
         body { margin: 0; background: black; overflow: hidden; }
         canvas { display: block; }
@@ -17,6 +17,14 @@
 
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
+
+        let mouseX = canvas.width / 2;
+        let mouseY = canvas.height / 2;
+
+        window.addEventListener("mousemove", (event) => {
+            mouseX = event.clientX;
+            mouseY = event.clientY;
+        });
 
         class Segment {
             constructor(parent, length, angle, isRoot = false) {
@@ -101,30 +109,34 @@
         let tentacles = [];
         let particles = [];
 
-        for (let i = 0; i < 12; i++) {
-            tentacles.push(new Tentacle(canvas.width / 2, canvas.height / 2, 120, 10));
+        for (let i = 0; i < 15; i++) {  // More tentacles for a fuller effect
+            tentacles.push(new Tentacle(canvas.width / 2, canvas.height / 2, 200, 20));
         }
 
-        for (let i = 0; i < 100; i++) {
+        for (let i = 0; i < 150; i++) {  // More particles for glow
             particles.push(new Particle());
         }
 
         function animate() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+            // Draw particles
             particles.forEach(particle => {
                 particle.update();
                 particle.draw();
             });
 
-            let time = performance.now() * 0.002;
-            let mouseX = canvas.width / 2 + Math.cos(time) * 200;
-            let mouseY = canvas.height / 2 + Math.sin(time) * 200;
-
+            // Move and draw tentacles
             tentacles.forEach(tentacle => {
                 tentacle.move(mouseX, mouseY);
                 tentacle.draw();
             });
+
+            // Draw glowing core
+            ctx.beginPath();
+            ctx.arc(mouseX, mouseY, 8, 0, Math.PI * 2);
+            ctx.fillStyle = "rgba(0, 150, 255, 0.9)";
+            ctx.fill();
 
             requestAnimationFrame(animate);
         }
