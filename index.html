@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Electric Tentacle Spider</title>
+    <title>Spider Following Mouse</title>
     <style>
-        body { margin: 0; background: black; overflow: hidden; }
+        body { margin: 0; overflow: hidden; background: black; }
         canvas { display: block; }
     </style>
 </head>
 <body>
-    <canvas id="tentacleCanvas"></canvas>
+    <canvas id="spiderCanvas"></canvas>
     <script>
-        const canvas = document.getElementById("tentacleCanvas");
+        const canvas = document.getElementById("spiderCanvas");
         const ctx = canvas.getContext("2d");
 
         canvas.width = window.innerWidth;
@@ -26,122 +26,79 @@
             mouseY = event.clientY;
         });
 
-        class Segment {
-            constructor(parent, length, angle, isRoot = false) {
-                this.parent = parent;
-                this.length = length;
-                this.angle = angle;
-                this.isRoot = isRoot;
-                this.x = parent ? parent.x + Math.cos(angle) * length : canvas.width / 2;
-                this.y = parent ? parent.y + Math.sin(angle) * length : canvas.height / 2;
+        class Leg {
+            constructor(offsetAngle) {
+                this.angle = offsetAngle;
+                this.length = 50;
+                this.baseX = 0;
+                this.baseY = 0;
+                this.endX = 0;
+                this.endY = 0;
+                this.speed = 0.05;
+                this.stepOffset = Math.random() * Math.PI * 2;
             }
 
-            update(targetX, targetY) {
-                if (!this.isRoot) {
-                    let dx = targetX - this.x;
-                    let dy = targetY - this.y;
-                    this.angle = Math.atan2(dy, dx);
-                    this.x = targetX - Math.cos(this.angle) * this.length;
-                    this.y = targetY - Math.sin(this.angle) * this.length;
-                }
+            update(baseX, baseY, time) {
+                this.baseX = baseX;
+                this.baseY = baseY;
+
+                let phase = Math.sin(time * this.speed + this.stepOffset) * 10;
+                this.endX = this.baseX + Math.cos(this.angle) * (this.length + phase);
+                this.endY = this.baseY + Math.sin(this.angle) * (this.length + phase);
             }
 
             draw() {
-                ctx.strokeStyle = "rgba(0, 150, 255, 0.8)";
-                ctx.lineWidth = 2;
+                ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
+                ctx.lineWidth = 4;
                 ctx.beginPath();
-                if (this.parent) {
-                    ctx.moveTo(this.parent.x, this.parent.y);
-                    ctx.lineTo(this.x, this.y);
-                }
+                ctx.moveTo(this.baseX, this.baseY);
+                ctx.lineTo(this.endX, this.endY);
                 ctx.stroke();
             }
         }
 
-        class Tentacle {
-            constructor(x, y, length, segments) {
-                this.x = x;
-                this.y = y;
-                this.segments = [];
-                this.segments.push(new Segment(null, length / segments, Math.random() * Math.PI * 2, true));
-
-                for (let i = 1; i < segments; i++) {
-                    this.segments.push(new Segment(this.segments[i - 1], length / segments, 0));
-                }
-            }
-
-            move(targetX, targetY) {
-                this.segments[this.segments.length - 1].update(targetX, targetY);
-
-                for (let i = this.segments.length - 2; i >= 0; i--) {
-                    this.segments[i].update(this.segments[i + 1].x, this.segments[i + 1].y);
-                }
-            }
-
-            draw() {
-                this.segments.forEach(segment => segment.draw());
-            }
-        }
-
-        class Particle {
+        class Spider {
             constructor() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
-                this.size = Math.random() * 2;
-                this.speedX = (Math.random() - 0.5) * 0.5;
-                this.speedY = (Math.random() - 0.5) * 0.5;
+                this.x = canvas.width / 2;
+                this.y = canvas.height / 2;
+                this.speed = 0.08;
+                this.legs = [];
+                for (let i = 0; i < 8; i++) {
+                    this.legs.push(new Leg((Math.PI / 4) * i));
+                }
             }
 
-            update() {
-                this.x += this.speedX;
-                this.y += this.speedY;
-
-                if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
-                if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
+            move() {
+                this.x += (mouseX - this.x) * this.speed;
+                this.y += (mouseY - this.y) * this.speed;
             }
 
-            draw() {
-                ctx.fillStyle = "rgba(0, 255, 150, 0.3)";
-                ctx.fillRect(this.x, this.y, this.size, this.size);
+            draw(time) {
+                this.move();
+
+                // Draw body
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 15, 0, Math.PI * 2);
+                ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+                ctx.fill();
+
+                // Draw legs
+                this.legs.forEach((leg) => {
+                    leg.update(this.x, this.y, time);
+                    leg.draw();
+                });
             }
         }
 
-        let tentacles = [];
-        let particles = [];
+        let spider = new Spider();
 
-        for (let i = 0; i < 15; i++) {  // More tentacles for a fuller effect
-            tentacles.push(new Tentacle(canvas.width / 2, canvas.height / 2, 200, 20));
-        }
-
-        for (let i = 0; i < 150; i++) {  // More particles for glow
-            particles.push(new Particle());
-        }
-
-        function animate() {
+        function animate(time) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Draw particles
-            particles.forEach(particle => {
-                particle.update();
-                particle.draw();
-            });
-
-            // Move and draw tentacles
-            tentacles.forEach(tentacle => {
-                tentacle.move(mouseX, mouseY);
-                tentacle.draw();
-            });
-
-            // Draw glowing core
-            ctx.beginPath();
-            ctx.arc(mouseX, mouseY, 8, 0, Math.PI * 2);
-            ctx.fillStyle = "rgba(0, 150, 255, 0.9)";
-            ctx.fill();
-
+            spider.draw(time);
             requestAnimationFrame(animate);
         }
 
-        animate();
+        animate(0);
     </script>
 </body>
 </html>
