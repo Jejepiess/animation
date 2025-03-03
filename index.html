@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>The Mortain Spider!!!</title>
+    <title>The Mortain Spider!!!</title>
     <style>
         body { margin: 0; overflow: hidden; background: black; }
         canvas { display: block; }
@@ -26,7 +26,7 @@
             mouseY = event.clientY;
         });
 
-        // More dots for better movement freedom
+        // More dots for better interaction
         const dots = Array.from({ length: 100 }, () => ({
             x: Math.random() * canvas.width,
             y: Math.random() * canvas.height
@@ -34,12 +34,13 @@
 
         class Tentacle {
             constructor() {
-                this.numSegments = 10;
-                this.segmentLength = 30;
+                this.numSegments = 12; // Slightly longer
+                this.segmentLength = 25; // Slightly shorter segments
                 this.segments = Array.from({ length: this.numSegments }, () => ({ x: 0, y: 0 }));
                 this.targetDot = null;
                 this.holdingTime = 0;
-                this.maxHoldTime = Math.random() * 40 + 20; // More variation in hold time
+                this.maxHoldTime = Math.random() * 50 + 30; // Hold dots for longer
+                this.attached = false;
             }
 
             getClosestDot() {
@@ -56,19 +57,31 @@
 
                 this.holdingTime++;
 
-                // Release and switch to a new dot after a random time
-                if (this.holdingTime > this.maxHoldTime) {
+                if (this.holdingTime > this.maxHoldTime || !this.targetDot) {
                     this.targetDot = this.getClosestDot();
                     this.holdingTime = 0;
-                    this.maxHoldTime = Math.random() * 40 + 20;
+                    this.maxHoldTime = Math.random() * 50 + 30;
+                    this.attached = false;
                 }
 
                 if (this.targetDot) {
                     let last = this.segments[this.numSegments - 1];
-                    last.x += (this.targetDot.x - last.x) * 0.15; // Slower movement for realism
-                    last.y += (this.targetDot.y - last.y) * 0.15;
+
+                    // If the tentacle hasn't fully latched on, move closer
+                    if (!this.attached) {
+                        last.x += (this.targetDot.x - last.x) * 0.2; 
+                        last.y += (this.targetDot.y - last.y) * 0.2;
+
+                        // If close enough, "attach" to the dot
+                        if (Math.hypot(last.x - this.targetDot.x, last.y - this.targetDot.y) < 5) {
+                            last.x = this.targetDot.x;
+                            last.y = this.targetDot.y;
+                            this.attached = true;
+                        }
+                    }
                 }
 
+                // Chain the segments together
                 for (let i = 1; i < this.numSegments; i++) {
                     let prev = this.segments[i - 1];
                     let seg = this.segments[i];
@@ -83,8 +96,8 @@
             }
 
             draw() {
-                ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
-                ctx.lineWidth = 2;
+                ctx.strokeStyle = "rgba(255, 255, 255, 0.6)"; // Thinner, creepier tentacles
+                ctx.lineWidth = 1.2;
                 ctx.beginPath();
                 ctx.moveTo(this.segments[0].x, this.segments[0].y);
                 for (let i = 1; i < this.numSegments; i++) {
@@ -98,8 +111,8 @@
             constructor() {
                 this.x = canvas.width / 2;
                 this.y = canvas.height / 2;
-                this.speed = 0.06;
-                this.tentacles = Array.from({ length: 12 }, () => new Tentacle()); // More tentacles
+                this.speed = 0.07;
+                this.tentacles = Array.from({ length: 20 }, () => new Tentacle()); // 20 tentacles!
             }
 
             move() {
@@ -143,3 +156,4 @@
     </script>
 </body>
 </html>
+
