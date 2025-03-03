@@ -26,8 +26,8 @@
 
         const dots = [];
         const numDots = 120;
-        const tentacleCount = 8;
-        const tentacleSegments = 10;
+        const tentacleCount = 10;
+        const tentacleSegments = 12;
 
         class Dot {
             constructor(x, y) {
@@ -50,7 +50,7 @@
                 this.target = null;
             }
 
-            findNearestDot() {
+            attachToNearestDot() {
                 let minDist = Infinity;
                 let closestDot = null;
                 for (let dot of dots) {
@@ -60,13 +60,14 @@
                         closestDot = dot;
                     }
                 }
-                return closestDot;
+                this.target = closestDot;
+                if (this.target) {
+                    this.snapToTarget();
+                }
             }
 
-            update() {
-                this.target = this.findNearestDot();
+            snapToTarget() {
                 if (!this.target) return;
-
                 this.segments[this.segments.length - 1] = { x: this.target.x, y: this.target.y };
                 for (let i = this.segments.length - 2; i >= 0; i--) {
                     let next = this.segments[i + 1];
@@ -74,6 +75,11 @@
                     seg.x = (next.x + this.base.x) / 2;
                     seg.y = (next.y + this.base.y) / 2;
                 }
+            }
+
+            update() {
+                if (!this.target) this.attachToNearestDot();
+                this.snapToTarget();
             }
 
             draw() {
