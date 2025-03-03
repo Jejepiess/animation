@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spider Tentacle Animation</title>
+    <title>Spider Tentacle Fix</title>
     <style>
         body { margin: 0; overflow: hidden; background: black; }
         canvas { display: block; }
@@ -26,7 +26,7 @@
             mouseY = event.clientY;
         });
 
-        // Generate dots as landing points for tentacles
+        // Generate random dots as anchor points
         const dots = Array.from({ length: 50 }, () => ({
             x: Math.random() * canvas.width,
             y: Math.random() * canvas.height
@@ -41,14 +41,16 @@
             }
 
             update(baseX, baseY) {
-                let dx = this.targetDot.x - baseX;
-                let dy = this.targetDot.y - baseY;
-                let angle = Math.atan2(dy, dx);
+                // Set the base of the tentacle at the spider's body
+                this.segments[0].x = baseX;
+                this.segments[0].y = baseY;
 
-                this.segments[0].x = baseX + Math.cos(angle) * 40;
-                this.segments[0].y = baseY + Math.sin(angle) * 40;
+                // Adjust last segment to align with the target dot
+                this.segments[this.numSegments - 1].x = this.targetDot.x;
+                this.segments[this.numSegments - 1].y = this.targetDot.y;
 
-                for (let i = 1; i < this.numSegments; i++) {
+                // Apply inverse kinematics (IK) to position the tentacle properly
+                for (let i = this.numSegments - 1; i > 0; i--) {
                     let prev = this.segments[i - 1];
                     let seg = this.segments[i];
 
@@ -123,3 +125,4 @@
     </script>
 </body>
 </html>
+
