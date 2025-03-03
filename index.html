@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gagamboy</title>
+    <title>bolbol ni cenen</title>
     <style>
         body { margin: 0; overflow: hidden; background: black; }
         canvas { display: block; }
@@ -21,30 +21,36 @@
         let mouseX = canvas.width / 2;
         let mouseY = canvas.height / 2;
 
+        const dots = [];
+        const numDots = 100;
+
+        for (let i = 0; i < numDots; i++) {
+            dots.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height
+            });
+        }
+
         window.addEventListener("mousemove", (event) => {
             mouseX = event.clientX;
             mouseY = event.clientY;
         });
 
         class Tentacle {
-            constructor(angleOffset) {
+            constructor(targetDot) {
                 this.segments = [];
-                this.numSegments = 8; 
-                this.segmentLength = 30; 
-                this.angleOffset = angleOffset;
+                this.numSegments = 10; 
+                this.segmentLength = 20; 
+                this.targetDot = targetDot;
                 
                 for (let i = 0; i < this.numSegments; i++) {
-                    this.segments.push({ x: 0, y: 0 });
+                    this.segments.push({ x: targetDot.x, y: targetDot.y });
                 }
             }
 
-            update(baseX, baseY, time) {
-                let angle = Math.sin(time * 0.01 + this.angleOffset) * 0.5;
-                let targetX = baseX + Math.cos(angle) * 40;
-                let targetY = baseY + Math.sin(angle) * 40;
-
-                this.segments[0].x = targetX;
-                this.segments[0].y = targetY;
+            update(baseX, baseY) {
+                this.segments[0].x = baseX;
+                this.segments[0].y = baseY;
 
                 for (let i = 1; i < this.numSegments; i++) {
                     let prev = this.segments[i - 1];
@@ -52,7 +58,6 @@
 
                     let dx = prev.x - seg.x;
                     let dy = prev.y - seg.y;
-                    let dist = Math.sqrt(dx * dx + dy * dy);
                     let angle = Math.atan2(dy, dx);
 
                     seg.x = prev.x - Math.cos(angle) * this.segmentLength;
@@ -62,7 +67,7 @@
 
             draw() {
                 ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
-                ctx.lineWidth = 4;
+                ctx.lineWidth = 2;
 
                 ctx.beginPath();
                 ctx.moveTo(this.segments[0].x, this.segments[0].y);
@@ -78,12 +83,8 @@
             constructor() {
                 this.x = canvas.width / 2;
                 this.y = canvas.height / 2;
-                this.speed = 0.08;
-                this.tentacles = [];
-
-                for (let i = 0; i < 8; i++) {
-                    this.tentacles.push(new Tentacle((Math.PI / 4) * i));
-                }
+                this.speed = 0.05;
+                this.tentacles = dots.map(dot => new Tentacle(dot));
             }
 
             move() {
@@ -91,7 +92,7 @@
                 this.y += (mouseY - this.y) * this.speed;
             }
 
-            draw(time) {
+            draw() {
                 this.move();
 
                 // Draw body
@@ -100,23 +101,34 @@
                 ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
                 ctx.fill();
 
-                // Draw tentacle legs
+                // Draw tentacles
                 this.tentacles.forEach((tentacle) => {
-                    tentacle.update(this.x, this.y, time);
+                    tentacle.update(this.x, this.y);
                     tentacle.draw();
                 });
             }
         }
 
+        function drawDots() {
+            ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
+            dots.forEach(dot => {
+                ctx.beginPath();
+                ctx.arc(dot.x, dot.y, 3, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
         let spider = new Spider();
 
-        function animate(time) {
+        function animate() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            spider.draw(time);
+            drawDots();
+            spider.draw();
             requestAnimationFrame(animate);
         }
 
-        animate(0);
+        animate();
     </script>
 </body>
 </html>
+
