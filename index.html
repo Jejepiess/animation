@@ -25,15 +25,19 @@
         canvas.height = window.innerHeight;
 
         const dots = [];
-        const numDots = 120;
-        const tentacleCount = 10;
-        const tentacleSegments = 12;
+        const numDots = 250;
+        const tentacleCount = 20;
+        const tentacleSegments = 15;
+        const connectRange = 100;
+        const speed = 0.1;
+        const detachThreshold = 7;
+        let mouseMoved = false;
 
         class Dot {
             constructor(x, y) {
                 this.x = x;
                 this.y = y;
-                this.radius = 3;
+                this.radius = 1.5;
             }
             draw() {
                 ctx.fillStyle = "yellow";
@@ -44,60 +48,68 @@
         }
 
         class Tentacle {
-            constructor(x, y, segments) {
+            constructor(x, y, segments, color) {
                 this.base = { x, y };
                 this.segments = Array.from({ length: segments }, () => ({ x, y }));
                 this.target = null;
+                this.color = color;
             }
 
-            attachToNearestDot() {
-                let minDist = Infinity;
-                let closestDot = null;
-                for (let dot of dots) {
-                    let dist = Math.hypot(dot.x - this.base.x, dot.y - this.base.y);
-                    if (dist < minDist) {
-                        minDist = dist;
-                        closestDot = dot;
-                    }
-                }
-                this.target = closestDot;
-                if (this.target) {
-                    this.snapToTarget();
-                }
-            }
-
-            snapToTarget() {
-                if (!this.target) return;
-                this.segments[this.segments.length - 1] = { x: this.target.x, y: this.target.y };
-                for (let i = this.segments.length - 2; i >= 0; i--) {
-                    let next = this.segments[i + 1];
-                    let seg = this.segments[i];
-                    seg.x = (next.x + this.base.x) / 2;
-                    seg.y = (next.y + this.base.y) / 2;
-                }
+            findNewTarget() {
+                if (!mouseMoved) return;
+                let nearbyDots = dots.filter(dot => 
+                    Math.hypot(dot.x - this.base.x, dot.y - this.base.y) < connectRange
+                );
+                this.target = nearbyDots.length > 0 ? nearbyDots[Math.floor(Math.random() * nearbyDots.length)] : null;
             }
 
             update() {
-                if (!this.target) this.attachToNearestDot();
-                this.snapToTarget();
+                if (!this.target || Math.hypot(this.target.x - this.segments[this.segments.length - 1].x, this.target.y - this.segments[this.segments.length - 1].y) < detachThreshold) {
+                    this.findNewTarget();
+                }
+                
+                if (this.target) {
+                    let endSegment = this.segments[this.segments.length - 1];
+                    endSegment.x += (this.target.x - endSegment.x) * speed;
+                    endSegment.y += (this.target.y - endSegment.y) * speed;
+                }
+                
+                for (let i = this.segments.length - 2; i >= 0; i--) {
+                    let next = this.segments[i + 1];
+                    let seg = this.segments[i];
+                    seg.x += (next.x - seg.x) * 0.4;
+                    seg.y += (next.y - seg.y) * 0.4;
+                }
             }
 
             draw() {
-                ctx.strokeStyle = "blue";
-                ctx.lineWidth = 2;
+                let gradient = ctx.createLinearGradient(this.base.x, this.base.y, this.segments[this.segments.length - 1].x, this.segments[this.segments.length - 1].y);
+                gradient.addColorStop(0, "black");
+                gradient.addColorStop(0.5, this.color);
+                gradient.addColorStop(1, "white");
+
+                ctx.strokeStyle = gradient;
+                ctx.lineWidth = 1.5;
                 ctx.beginPath();
                 ctx.moveTo(this.base.x, this.base.y);
                 for (let seg of this.segments) {
                     ctx.lineTo(seg.x, seg.y);
                 }
                 ctx.stroke();
+
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.segments[this.segments.length - 1].x, this.segments[this.segments.length - 1].y, 2, 0, Math.PI * 2);
+                ctx.fill();
             }
         }
 
         const creature = { x: canvas.width / 2, y: canvas.height / 2, tentacles: [] };
+        const colors = ["cyan", "blue", "purple"];
 
         for (let i = 0; i < tentacleCount; i++) {
-            creature.tentacles.push(new Tentacle(creature.x, creature.y, tentacleSegments));
+            let color = colors[i % colors.length];
+            creature.tentacles.push(new Tentacle(creature.x, creature.y, tentacleSegments, color));
         }
 
         for (let i = 0; i < numDots; i++) {
@@ -112,16 +124,16 @@
                 t.draw();
             });
 
-            // Draw creature's head (white core)
             ctx.fillStyle = "white";
             ctx.beginPath();
-            ctx.arc(creature.x, creature.y, 10, 0, Math.PI * 2);
+            ctx.arc(creature.x, creature.y, 18, 0, Math.PI * 2);
             ctx.fill();
 
             requestAnimationFrame(animate);
         }
 
         canvas.addEventListener("mousemove", (e) => {
+            mouseMoved = true;
             creature.x = e.clientX;
             creature.y = e.clientY;
             for (let t of creature.tentacles) {
