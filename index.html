@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Creepy Crawler</title>
+    <title>Creepy Electric Spider</title>
     <style>
         body { margin: 0; overflow: hidden; background: black; }
         canvas { display: block; }
@@ -18,13 +18,8 @@
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        let mouseX = canvas.width / 2;
-        let mouseY = canvas.height / 2;
-
-        window.addEventListener("mousemove", (event) => {
-            mouseX = event.clientX;
-            mouseY = event.clientY;
-        });
+        let centerX = canvas.width / 2;
+        let centerY = canvas.height / 2;
 
         // Background dots
         const dots = Array.from({ length: 300 }, () => ({
@@ -33,11 +28,11 @@
         }));
 
         class Tentacle {
-            constructor(baseOffset) {
-                this.numSegments = 12; // Medium length tentacles
-                this.segmentLength = 15;
-                this.segments = Array.from({ length: this.numSegments }, () => ({ x: 0, y: 0 }));
-                this.baseOffset = baseOffset;
+            constructor(baseAngle) {
+                this.numSegments = 14; // Longer tentacles
+                this.segmentLength = 18;
+                this.segments = Array.from({ length: this.numSegments }, () => ({ x: centerX, y: centerY }));
+                this.baseAngle = baseAngle;
                 this.targetDot = null;
             }
 
@@ -54,13 +49,11 @@
                 return closest;
             }
 
-            update(spiderX, spiderY) {
-                let baseX = spiderX + Math.cos(this.baseOffset) * 10;
-                let baseY = spiderY + Math.sin(this.baseOffset) * 10;
-                this.segments[0].x = baseX;
-                this.segments[0].y = baseY;
+            update() {
+                this.segments[0].x = centerX + Math.cos(this.baseAngle) * 20;
+                this.segments[0].y = centerY + Math.sin(this.baseAngle) * 20;
 
-                // Instantly snap the tentacle tip to the nearest dot
+                // Instantly snap tentacle tip to nearest dot
                 this.targetDot = this.getClosestDot();
                 if (this.targetDot) {
                     let last = this.segments[this.numSegments - 1];
@@ -83,7 +76,7 @@
 
             draw() {
                 ctx.strokeStyle = "rgba(0, 150, 255, 0.8)";
-                ctx.lineWidth = 2;
+                ctx.lineWidth = 3;
                 ctx.beginPath();
                 ctx.moveTo(this.segments[0].x, this.segments[0].y);
                 for (let i = 1; i < this.numSegments; i++) {
@@ -95,33 +88,24 @@
                 ctx.fillStyle = "rgba(255, 255, 255, 1)";
                 let tip = this.segments[this.numSegments - 1];
                 ctx.beginPath();
-                ctx.arc(tip.x, tip.y, 4, 0, Math.PI * 2);
+                ctx.arc(tip.x, tip.y, 5, 0, Math.PI * 2);
                 ctx.fill();
             }
         }
 
         class Spider {
             constructor() {
-                this.x = canvas.width / 2;
-                this.y = canvas.height / 2;
-                this.speed = 0.12; // Faster movement
                 this.tentacles = Array.from({ length: 10 }, (_, i) => new Tentacle((i / 10) * Math.PI * 2));
             }
 
-            move() {
-                this.x += (mouseX - this.x) * this.speed;
-                this.y += (mouseY - this.y) * this.speed;
-            }
-
             draw() {
-                this.move();
                 ctx.beginPath();
-                ctx.arc(this.x, this.y, 10, 0, Math.PI * 2);
+                ctx.arc(centerX, centerY, 15, 0, Math.PI * 2);
                 ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
                 ctx.fill();
 
                 this.tentacles.forEach((tentacle) => {
-                    tentacle.update(this.x, this.y);
+                    tentacle.update();
                     tentacle.draw();
                 });
             }
