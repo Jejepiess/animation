@@ -27,7 +27,7 @@
         });
 
         // Generate random dots as anchor points
-        const dots = Array.from({ length: 50 }, () => ({
+        const dots = Array.from({ length: 20 }, () => ({
             x: Math.random() * canvas.width,
             y: Math.random() * canvas.height
         }));
@@ -41,27 +41,33 @@
             }
 
             update(baseX, baseY) {
-                // Set the base of the tentacle at the spider's body
+                // Set base of tentacle at spider's body
                 this.segments[0].x = baseX;
                 this.segments[0].y = baseY;
 
-                // Adjust last segment to align with the target dot
-                this.segments[this.numSegments - 1].x = this.targetDot.x;
-                this.segments[this.numSegments - 1].y = this.targetDot.y;
-
-                // Apply inverse kinematics (IK) to position the tentacle properly
-                for (let i = this.numSegments - 1; i > 0; i--) {
+                // Apply Forward Reaching Inverse Kinematics (FABRIK-like) to align with target
+                for (let i = 1; i < this.numSegments; i++) {
                     let prev = this.segments[i - 1];
                     let seg = this.segments[i];
 
-                    let dx = prev.x - seg.x;
-                    let dy = prev.y - seg.y;
+                    let dx = seg.x - prev.x;
+                    let dy = seg.y - prev.y;
                     let dist = Math.sqrt(dx * dx + dy * dy);
                     let angle = Math.atan2(dy, dx);
 
-                    seg.x = prev.x - Math.cos(angle) * this.segmentLength;
-                    seg.y = prev.y - Math.sin(angle) * this.segmentLength;
+                    seg.x = prev.x + Math.cos(angle) * this.segmentLength;
+                    seg.y = prev.y + Math.sin(angle) * this.segmentLength;
                 }
+
+                // Adjust last segment toward target dot
+                let last = this.segments[this.numSegments - 1];
+                let dx = this.targetDot.x - last.x;
+                let dy = this.targetDot.y - last.y;
+                let dist = Math.sqrt(dx * dx + dy * dy);
+                let angle = Math.atan2(dy, dx);
+
+                last.x += Math.cos(angle) * Math.min(dist, this.segmentLength);
+                last.y += Math.sin(angle) * Math.min(dist, this.segmentLength);
             }
 
             draw() {
@@ -104,10 +110,10 @@
         }
 
         function drawDots() {
-            ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
+            ctx.fillStyle = "rgba(255, 255, 0, 0.8)"; // Brighter yellow dots for debugging
             dots.forEach(dot => {
                 ctx.beginPath();
-                ctx.arc(dot.x, dot.y, 3, 0, Math.PI * 2);
+                ctx.arc(dot.x, dot.y, 6, 0, Math.PI * 2); // Bigger dots
                 ctx.fill();
             });
         }
