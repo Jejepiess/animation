@@ -26,6 +26,7 @@
             font-size: 18px;
             text-align: center;
             z-index: 10;
+            transition: opacity 2s ease-out;
         }
     </style>
 </head>
@@ -35,15 +36,16 @@
         Your browser does not support the audio element.
     </audio>
 
-    <div id="message">Gusto mo ng malupit na background music? Pindutin mo lng ung screen</div>
+    <div id="message">Gusto mo ng malupit na background music? Pindutin mo uli ung screen!</div>
     <canvas id="canvas"></canvas>
 
     <script>
         const message = document.getElementById("message");
-        
-        // Hide the message after 5 seconds
+
+        // Smooth fade-out after 5 seconds
         setTimeout(() => {
-            message.style.display = "none";
+            message.style.opacity = "0"; // Slowly fade out
+            setTimeout(() => message.style.display = "none", 2000); // Remove after fade-out
         }, 5000);
 
         const canvas = document.getElementById("canvas");
