@@ -29,29 +29,30 @@
         const music = document.getElementById("background-music");
 
         function resizeCanvas() {
-            canvas.width = document.documentElement.clientWidth;
-            canvas.height = document.documentElement.clientHeight;
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
         }
         resizeCanvas();
         window.addEventListener("resize", resizeCanvas);
 
-        const particles = [];
-        const numParticles = 400;
+        const dots = [];
+        const numDots = 400;
         const tentacleCount = 20;
         const tentacleSegments = 15;
         const connectRange = 150;
         const speed = 0.2;
+        const detachThreshold = 10;
         let userInteracted = false;
+        const particles = [];
 
         function startMusic() {
             if (music.paused) {
-                music.play().catch(() => console.log("Autoplay blocked"));
+                music.play();
             }
         }
 
-        // Ensure music starts on interaction (fixes mobile issue)
         document.body.addEventListener("click", startMusic);
-        document.body.addEventListener("touchstart", startMusic, { passive: true });
+        document.body.addEventListener("touchstart", startMusic);
 
         class Particle {
             constructor(x, y, size, color) {
@@ -82,13 +83,29 @@
             constructor(x, y, segments, color) {
                 this.base = { x, y };
                 this.segments = Array.from({ length: segments }, () => ({ x, y }));
+                this.target = null;
                 this.color = color;
             }
 
-            update(targetX, targetY) {
-                this.segments[this.segments.length - 1].x += (targetX - this.segments[this.segments.length - 1].x) * speed;
-                this.segments[this.segments.length - 1].y += (targetY - this.segments[this.segments.length - 1].y) * speed;
+            findNewTarget() {
+                if (!userInteracted) return;
+                let nearbyDots = dots.filter(dot => 
+                    Math.hypot(dot.x - this.base.x, dot.y - this.base.y) < connectRange
+                );
+                this.target = nearbyDots.length > 0 ? nearbyDots[Math.floor(Math.random() * nearbyDots.length)] : null;
+            }
 
+            update() {
+                if (!this.target || Math.hypot(this.target.x - this.segments[this.segments.length - 1].x, this.target.y - this.segments[this.segments.length - 1].y) < detachThreshold) {
+                    this.findNewTarget();
+                }
+                
+                if (this.target) {
+                    let endSegment = this.segments[this.segments.length - 1];
+                    endSegment.x += (this.target.x - endSegment.x) * speed;
+                    endSegment.y += (this.target.y - endSegment.y) * speed;
+                }
+                
                 for (let i = this.segments.length - 2; i >= 0; i--) {
                     let next = this.segments[i + 1];
                     let seg = this.segments[i];
@@ -98,7 +115,12 @@
             }
 
             draw() {
-                ctx.strokeStyle = this.color;
+                let gradient = ctx.createLinearGradient(this.base.x, this.base.y, this.segments[this.segments.length - 1].x, this.segments[this.segments.length - 1].y);
+                gradient.addColorStop(0, "black");
+                gradient.addColorStop(0.5, this.color);
+                gradient.addColorStop(1, "white");
+                
+                ctx.strokeStyle = gradient;
                 ctx.lineWidth = 1.5;
                 ctx.beginPath();
                 ctx.moveTo(this.base.x, this.base.y);
@@ -109,36 +131,31 @@
             }
         }
 
-        const creature = { x: canvas.width / 2, y: canvas.height / 2, tentacles: [] };
-        const colors = ["cyan", "blue", "purple"];
-
-        for (let i = 0; i < tentacleCount; i++) {
-            let color = colors[i % colors.length];
-            creature.tentacles.push(new Tentacle(creature.x, creature.y, tentacleSegments, color));
-        }
-
         function animate() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Smoke particle effect when moving
-            particles.push(new Particle(creature.x, creature.y, 5, "rgba(255, 255, 255, 0.5)"));
-            particles.forEach((p, index) => {
-                p.update();
-                p.draw();
-                if (p.life <= 0) particles.splice(index, 1);
+            dots.forEach(dot => {
+                ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+                ctx.beginPath();
+                ctx.arc(dot.x, dot.y, 2.5, 0, Math.PI * 2);
+                ctx.fill();
             });
-
+            
             creature.tentacles.forEach(t => {
-                t.update(creature.x, creature.y);
+                t.update();
                 t.draw();
             });
-
-            // Draw main creature ball
+            
             ctx.fillStyle = "#FFD700";
             ctx.beginPath();
             ctx.arc(creature.x, creature.y, 18, 0, Math.PI * 2);
             ctx.fill();
-
+            
+            particles.forEach((particle, index) => {
+                particle.update();
+                particle.draw();
+                if (particle.life <= 0) particles.splice(index, 1);
+            });
+            
             requestAnimationFrame(animate);
         }
 
@@ -147,21 +164,14 @@
             creature.x = x;
             creature.y = y;
             creature.tentacles.forEach(t => {
-                t.base.x = creature.x;
-                t.base.y = creature.y;
+                t.base.x = x;
+                t.base.y = y;
             });
+            particles.push(new Particle(x, y, 5, "rgba(255, 255, 255, 0.3)"));
         }
 
-        // Mouse movement support
-        canvas.addEventListener("mousemove", (e) => {
-            moveCreature(e.clientX, e.clientY);
-        });
-
-        // Touch movement support (Fixed for mobile)
-        canvas.addEventListener("touchmove", (e) => {
-            e.preventDefault(); // Prevent scrolling issues
-            moveCreature(e.touches[0].clientX, e.touches[0].clientY);
-        }, { passive: false });
+        canvas.addEventListener("touchmove", (e) => moveCreature(e.touches[0].clientX, e.touches[0].clientY));
+        canvas.addEventListener("mousemove", (e) => moveCreature(e.clientX, e.clientY));
 
         animate();
     </script>
