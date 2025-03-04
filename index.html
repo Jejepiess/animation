@@ -8,7 +8,7 @@
         body {
             margin: 0;
             overflow: hidden;
-            background-color: black;
+            background: radial-gradient(circle, rgba(75,0,130,1) 10%, rgba(25,0,51,1) 50%, black 90%);
         }
         canvas {
             display: block;
@@ -25,28 +25,13 @@
         canvas.height = window.innerHeight;
 
         const dots = [];
-        const numDots = 600;
+        const numDots = 400;
         const tentacleCount = 20;
         const tentacleSegments = 15;
-        const connectRange = 200;
+        const connectRange = 150;
         const speed = 0.1;
         const detachThreshold = 10;
         let mouseMoved = false;
-
-        function drawBackground() {
-            ctx.fillStyle = "black";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            for (let i = 0; i < 300; i++) {
-                let x = Math.random() * canvas.width;
-                let y = Math.random() * canvas.height;
-                let radius = Math.random() * 2;
-                ctx.fillStyle = `rgba(255, 255, 255, ${Math.random()})`;
-                ctx.beginPath();
-                ctx.arc(x, y, radius, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
 
         class Dot {
             constructor(x, y) {
@@ -55,7 +40,7 @@
                 this.radius = 1.5;
             }
             draw() {
-                ctx.fillStyle = "white";
+                ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
                 ctx.fill();
@@ -132,7 +117,7 @@
         }
 
         function animate() {
-            drawBackground();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             dots.forEach(dot => dot.draw());
             creature.tentacles.forEach(t => {
                 t.update();
