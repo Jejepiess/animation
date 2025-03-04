@@ -12,20 +12,6 @@
             touch-action: none;
         }
         canvas {
-            display: block;<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alaga ni Joshua</title>
-    <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-            background: radial-gradient(circle, rgba(120,50,200,1) 20%, rgba(75,0,130,1) 60%, black 100%);
-            touch-action: none;
-        }
-        canvas {
             display: block;
         }
     </style>
@@ -56,39 +42,16 @@
         const connectRange = 150;
         const speed = 0.2;
         const detachThreshold = 10;
-        const particles = [];
         let userInteracted = false;
 
-        document.body.addEventListener("click", () => {
+        function startMusic() {
             if (music.paused) {
                 music.play();
             }
-        });
-
-        class Particle {
-            constructor(x, y, size, color) {
-                this.x = x;
-                this.y = y;
-                this.size = size;
-                this.color = color;
-                this.life = Math.random() * 50 + 50;
-                this.velocityX = (Math.random() - 0.5) * 2;
-                this.velocityY = (Math.random() - 0.5) * 2;
-            }
-
-            update() {
-                this.x += this.velocityX;
-                this.y += this.velocityY;
-                this.life -= 1;
-            }
-
-            draw() {
-                ctx.fillStyle = this.color;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
-            }
         }
+
+        document.body.addEventListener("click", startMusic);
+        document.body.addEventListener("touchstart", startMusic);
 
         class Tentacle {
             constructor(x, y, segments, color) {
@@ -168,12 +131,6 @@
                 t.draw();
             });
             
-            particles.forEach((particle, index) => {
-                particle.update();
-                particle.draw();
-                if (particle.life <= 0) particles.splice(index, 1);
-            });
-            
             ctx.fillStyle = "#FFD700";
             ctx.beginPath();
             ctx.arc(creature.x, creature.y, 18, 0, Math.PI * 2);
@@ -182,8 +139,26 @@
             requestAnimationFrame(animate);
         }
 
+        function moveCreature(x, y) {
+            userInteracted = true;
+            creature.x = x;
+            creature.y = y;
+            creature.tentacles.forEach(t => {
+                t.base.x = x;
+                t.base.y = y;
+            });
+        }
+
+        canvas.addEventListener("touchmove", (e) => {
+            let touch = e.touches[0];
+            moveCreature(touch.clientX, touch.clientY);
+        });
+
+        canvas.addEventListener("mousemove", (e) => {
+            moveCreature(e.clientX, e.clientY);
+        });
+
         animate();
     </script>
 </body>
 </html>
-
