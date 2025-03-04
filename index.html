@@ -29,20 +29,32 @@
         const tentacleCount = 20;
         const tentacleSegments = 15;
         const connectRange = 150;
-        const speed = 0.1;
+        const speed = 0.2;
         const detachThreshold = 10;
+        const particles = [];
         let mouseMoved = false;
 
-        class Dot {
-            constructor(x, y) {
+        class Particle {
+            constructor(x, y, size, color) {
                 this.x = x;
                 this.y = y;
-                this.radius = 2.5;
+                this.size = size;
+                this.color = color;
+                this.life = Math.random() * 50 + 50;
+                this.velocityX = (Math.random() - 0.5) * 2;
+                this.velocityY = (Math.random() - 0.5) * 2;
             }
+
+            update() {
+                this.x += this.velocityX;
+                this.y += this.velocityY;
+                this.life -= 1;
+            }
+
             draw() {
-                ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+                ctx.fillStyle = this.color;
                 ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
                 ctx.fill();
             }
         }
@@ -87,7 +99,7 @@
                 gradient.addColorStop(0, "black");
                 gradient.addColorStop(0.5, this.color);
                 gradient.addColorStop(1, "white");
-
+                
                 ctx.strokeStyle = gradient;
                 ctx.lineWidth = 1.5;
                 ctx.beginPath();
@@ -96,11 +108,6 @@
                     ctx.lineTo(seg.x, seg.y);
                 }
                 ctx.stroke();
-
-                ctx.fillStyle = this.color;
-                ctx.beginPath();
-                ctx.arc(this.segments[this.segments.length - 1].x, this.segments[this.segments.length - 1].y, 2, 0, Math.PI * 2);
-                ctx.fill();
             }
         }
 
@@ -113,32 +120,34 @@
         }
 
         for (let i = 0; i < numDots; i++) {
-            dots.push(new Dot(Math.random() * canvas.width, Math.random() * canvas.height));
+            dots.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height });
         }
 
         function animate() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            dots.forEach(dot => dot.draw());
+            dots.forEach(dot => {
+                ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+                ctx.beginPath();
+                ctx.arc(dot.x, dot.y, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
             creature.tentacles.forEach(t => {
                 t.update();
                 t.draw();
             });
-
-            // Create a radiant glow effect for the head
-            let glowGradient = ctx.createRadialGradient(creature.x, creature.y, 5, creature.x, creature.y, 25);
-            glowGradient.addColorStop(0, "rgba(255, 215, 0, 1)"); // Bright gold center
-            glowGradient.addColorStop(1, "rgba(255, 215, 0, 0)"); // Fade to transparent
-            ctx.fillStyle = glowGradient;
-            ctx.beginPath();
-            ctx.arc(creature.x, creature.y, 25, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Draw the core circle
-            ctx.fillStyle = "#FFD700"; 
+            
+            particles.forEach((particle, index) => {
+                particle.update();
+                particle.draw();
+                if (particle.life <= 0) particles.splice(index, 1);
+            });
+            
+            ctx.fillStyle = "#FFD700";
             ctx.beginPath();
             ctx.arc(creature.x, creature.y, 18, 0, Math.PI * 2);
             ctx.fill();
-
+            
             requestAnimationFrame(animate);
         }
 
@@ -146,9 +155,14 @@
             mouseMoved = true;
             creature.x = e.clientX;
             creature.y = e.clientY;
-            for (let t of creature.tentacles) {
+            creature.tentacles.forEach(t => {
                 t.base.x = creature.x;
                 t.base.y = creature.y;
+            });
+
+            for (let i = 0; i < 5; i++) {
+                let color = colors[Math.floor(Math.random() * colors.length)];
+                particles.push(new Particle(creature.x, creature.y, Math.random() * 4 + 2, color));
             }
         });
 
