@@ -43,6 +43,7 @@
         const speed = 0.2;
         const detachThreshold = 10;
         let userInteracted = false;
+        const particles = [];
 
         function startMusic() {
             if (music.paused) {
@@ -52,6 +53,31 @@
 
         document.body.addEventListener("click", startMusic);
         document.body.addEventListener("touchstart", startMusic);
+
+        class Particle {
+            constructor(x, y, size, color) {
+                this.x = x;
+                this.y = y;
+                this.size = size;
+                this.color = color;
+                this.life = Math.random() * 50 + 50;
+                this.velocityX = (Math.random() - 0.5) * 2;
+                this.velocityY = (Math.random() - 0.5) * 2;
+            }
+
+            update() {
+                this.x += this.velocityX;
+                this.y += this.velocityY;
+                this.life -= 1;
+            }
+
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
 
         class Tentacle {
             constructor(x, y, segments, color) {
@@ -105,18 +131,6 @@
             }
         }
 
-        const creature = { x: canvas.width / 2, y: canvas.height / 2, tentacles: [] };
-        const colors = ["cyan", "blue", "purple"];
-
-        for (let i = 0; i < tentacleCount; i++) {
-            let color = colors[i % colors.length];
-            creature.tentacles.push(new Tentacle(creature.x, creature.y, tentacleSegments, color));
-        }
-
-        for (let i = 0; i < numDots; i++) {
-            dots.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height });
-        }
-
         function animate() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             dots.forEach(dot => {
@@ -136,6 +150,12 @@
             ctx.arc(creature.x, creature.y, 18, 0, Math.PI * 2);
             ctx.fill();
             
+            particles.forEach((particle, index) => {
+                particle.update();
+                particle.draw();
+                if (particle.life <= 0) particles.splice(index, 1);
+            });
+            
             requestAnimationFrame(animate);
         }
 
@@ -147,16 +167,11 @@
                 t.base.x = x;
                 t.base.y = y;
             });
+            particles.push(new Particle(x, y, 5, "rgba(255, 255, 255, 0.3)"));
         }
 
-        canvas.addEventListener("touchmove", (e) => {
-            let touch = e.touches[0];
-            moveCreature(touch.clientX, touch.clientY);
-        });
-
-        canvas.addEventListener("mousemove", (e) => {
-            moveCreature(e.clientX, e.clientY);
-        });
+        canvas.addEventListener("touchmove", (e) => moveCreature(e.touches[0].clientX, e.touches[0].clientY));
+        canvas.addEventListener("mousemove", (e) => moveCreature(e.clientX, e.clientY));
 
         animate();
     </script>
