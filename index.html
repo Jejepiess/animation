@@ -99,13 +99,13 @@
                 if (!this.target || Math.hypot(this.target.x - this.segments[this.segments.length - 1].x, this.target.y - this.segments[this.segments.length - 1].y) < detachThreshold) {
                     this.findNewTarget();
                 }
-                
+
                 if (this.target) {
                     let endSegment = this.segments[this.segments.length - 1];
                     endSegment.x += (this.target.x - endSegment.x) * speed;
                     endSegment.y += (this.target.y - endSegment.y) * speed;
                 }
-                
+
                 for (let i = this.segments.length - 2; i >= 0; i--) {
                     let next = this.segments[i + 1];
                     let seg = this.segments[i];
@@ -119,7 +119,7 @@
                 gradient.addColorStop(0, "black");
                 gradient.addColorStop(0.5, this.color);
                 gradient.addColorStop(1, "white");
-                
+
                 ctx.strokeStyle = gradient;
                 ctx.lineWidth = 1.5;
                 ctx.beginPath();
@@ -131,6 +131,18 @@
             }
         }
 
+        const creature = { x: canvas.width / 2, y: canvas.height / 2, tentacles: [] };
+        const colors = ["cyan", "blue", "purple"];
+
+        for (let i = 0; i < tentacleCount; i++) {
+            let color = colors[i % colors.length];
+            creature.tentacles.push(new Tentacle(creature.x, creature.y, tentacleSegments, color));
+        }
+
+        for (let i = 0; i < numDots; i++) {
+            dots.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height });
+        }
+
         function animate() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             dots.forEach(dot => {
@@ -139,17 +151,17 @@
                 ctx.arc(dot.x, dot.y, 2.5, 0, Math.PI * 2);
                 ctx.fill();
             });
-            
+
             creature.tentacles.forEach(t => {
                 t.update();
                 t.draw();
             });
-            
+
             ctx.fillStyle = "#FFD700";
             ctx.beginPath();
             ctx.arc(creature.x, creature.y, 18, 0, Math.PI * 2);
             ctx.fill();
-            
+
             particles.forEach((particle, index) => {
                 particle.update();
                 particle.draw();
@@ -170,6 +182,14 @@
             particles.push(new Particle(x, y, 5, "rgba(255, 255, 255, 0.3)"));
         }
 
+        canvas.addEventListener("touchmove", (e) => {
+            let touch = e.touches[0];
+            moveCreature(touch.clientX, touch.clientY);
+        });
+
+        canvas.addEventListener("mousemove", (e) => {
+            moveCreature(e.clientX, e.clientY);
+        });
         canvas.addEventListener("touchmove", (e) => moveCreature(e.touches[0].clientX, e.touches[0].clientY));
         canvas.addEventListener("mousemove", (e) => moveCreature(e.clientX, e.clientY));
 
