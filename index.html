@@ -8,7 +8,7 @@
         body {
             margin: 0;
             overflow: hidden;
-            background: radial-gradient(circle, rgba(75,0,130,1) 10%, rgba(25,0,51,1) 50%, black 90%);
+            background: radial-gradient(circle, rgba(120,50,200,1) 20%, rgba(75,0,130,1) 60%, black 100%);
         }
         canvas {
             display: block;
@@ -37,10 +37,10 @@
             constructor(x, y) {
                 this.x = x;
                 this.y = y;
-                this.radius = 1.5;
+                this.radius = 2.5; // Increased brightness by making dots larger
             }
             draw() {
-                ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
+                ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
                 ctx.fill();
@@ -124,7 +124,7 @@
                 t.draw();
             });
 
-            ctx.fillStyle = "#6A0DAD"; // Space-themed purple
+            ctx.fillStyle = "#6A0DAD";
             ctx.beginPath();
             ctx.arc(creature.x, creature.y, 18, 0, Math.PI * 2);
             ctx.fill();
@@ -146,4 +146,3 @@
     </script>
 </body>
 </html>
-
