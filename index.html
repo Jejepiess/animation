@@ -32,6 +32,7 @@
         const speed = 0.1;
         const detachThreshold = 10;
         let mouseMoved = false;
+        let headOffset = { x: 20, y: 20 }; // Offset to keep the head slightly behind the cursor
 
         class Dot {
             constructor(x, y) {
@@ -124,19 +125,22 @@
                 t.draw();
             });
 
+            let headX = creature.x - headOffset.x;
+            let headY = creature.y - headOffset.y;
+
             // Create a radiant glow effect for the head
-            let glowGradient = ctx.createRadialGradient(creature.x, creature.y, 5, creature.x, creature.y, 25);
+            let glowGradient = ctx.createRadialGradient(headX, headY, 5, headX, headY, 25);
             glowGradient.addColorStop(0, "rgba(255, 215, 0, 1)"); // Bright gold center
             glowGradient.addColorStop(1, "rgba(255, 215, 0, 0)"); // Fade to transparent
             ctx.fillStyle = glowGradient;
             ctx.beginPath();
-            ctx.arc(creature.x, creature.y, 25, 0, Math.PI * 2);
+            ctx.arc(headX, headY, 25, 0, Math.PI * 2);
             ctx.fill();
 
             // Draw the core circle
             ctx.fillStyle = "#FFD700"; 
             ctx.beginPath();
-            ctx.arc(creature.x, creature.y, 18, 0, Math.PI * 2);
+            ctx.arc(headX, headY, 18, 0, Math.PI * 2);
             ctx.fill();
 
             requestAnimationFrame(animate);
