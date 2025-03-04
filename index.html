@@ -25,13 +25,24 @@
         canvas.height = window.innerHeight;
 
         const dots = [];
-        const numDots = 250;
+        const numDots = 400; // Increased number of dots
         const tentacleCount = 20;
         const tentacleSegments = 15;
-        const connectRange = 100;
+        const connectRange = 150; // Increased connection range
         const speed = 0.1;
-        const detachThreshold = 7;
+        const detachThreshold = 10;
         let mouseMoved = false;
+
+        function drawBackground() {
+            let gradient = ctx.createRadialGradient(
+                canvas.width / 2, canvas.height / 2, 50,
+                canvas.width / 2, canvas.height / 2, canvas.width / 1.5
+            );
+            gradient.addColorStop(0, "#000022");
+            gradient.addColorStop(1, "black");
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
 
         class Dot {
             constructor(x, y) {
@@ -40,7 +51,7 @@
                 this.radius = 1.5;
             }
             draw() {
-                ctx.fillStyle = "yellow";
+                ctx.fillStyle = "white";
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
                 ctx.fill();
@@ -117,7 +128,7 @@
         }
 
         function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawBackground();
             dots.forEach(dot => dot.draw());
             creature.tentacles.forEach(t => {
                 t.update();
