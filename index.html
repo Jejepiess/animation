@@ -12,16 +12,35 @@
             touch-action: none;
         }
         canvas {
+            display: block;<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alaga ni Joshua</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: radial-gradient(circle, rgba(120,50,200,1) 20%, rgba(75,0,130,1) 60%, black 100%);
+            touch-action: none;
+        }
+        canvas {
             display: block;
         }
     </style>
 </head>
 <body>
+    <audio id="background-music" loop>
+        <source src="space-beat-263970.mp3" type="audio/mp3">
+        Your browser does not support the audio element.
+    </audio>
     <canvas id="canvas"></canvas>
 
     <script>
         const canvas = document.getElementById("canvas");
         const ctx = canvas.getContext("2d");
+        const music = document.getElementById("background-music");
 
         function resizeCanvas() {
             canvas.width = window.innerWidth;
@@ -39,6 +58,12 @@
         const detachThreshold = 10;
         const particles = [];
         let userInteracted = false;
+
+        document.body.addEventListener("click", () => {
+            if (music.paused) {
+                music.play();
+            }
+        });
 
         class Particle {
             constructor(x, y, size, color) {
@@ -156,28 +181,6 @@
             
             requestAnimationFrame(animate);
         }
-
-        function moveCreature(x, y) {
-            userInteracted = true;
-            creature.x = x;
-            creature.y = y;
-            creature.tentacles.forEach(t => {
-                t.base.x = creature.x;
-                t.base.y = creature.y;
-            });
-
-            for (let i = 0; i < 5; i++) {
-                let color = colors[Math.floor(Math.random() * colors.length)];
-                particles.push(new Particle(creature.x, creature.y, Math.random() * 4 + 2, color));
-            }
-        }
-
-        canvas.addEventListener("mousemove", (e) => moveCreature(e.clientX, e.clientY));
-        canvas.addEventListener("touchmove", (e) => {
-            e.preventDefault();
-            let touch = e.touches[0];
-            moveCreature(touch.clientX, touch.clientY);
-        });
 
         animate();
     </script>
