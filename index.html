@@ -9,6 +9,7 @@
             margin: 0;
             overflow: hidden;
             background: radial-gradient(circle, rgba(120,50,200,1) 20%, rgba(75,0,130,1) 60%, black 100%);
+            touch-action: none;
         }
         canvas {
             display: block;
@@ -21,8 +22,13 @@
     <script>
         const canvas = document.getElementById("canvas");
         const ctx = canvas.getContext("2d");
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener("resize", resizeCanvas);
 
         const dots = [];
         const numDots = 400;
@@ -32,7 +38,7 @@
         const speed = 0.2;
         const detachThreshold = 10;
         const particles = [];
-        let mouseMoved = false;
+        let userInteracted = false;
 
         class Particle {
             constructor(x, y, size, color) {
@@ -68,7 +74,7 @@
             }
 
             findNewTarget() {
-                if (!mouseMoved) return;
+                if (!userInteracted) return;
                 let nearbyDots = dots.filter(dot => 
                     Math.hypot(dot.x - this.base.x, dot.y - this.base.y) < connectRange
                 );
@@ -151,10 +157,10 @@
             requestAnimationFrame(animate);
         }
 
-        canvas.addEventListener("mousemove", (e) => {
-            mouseMoved = true;
-            creature.x = e.clientX;
-            creature.y = e.clientY;
+        function moveCreature(x, y) {
+            userInteracted = true;
+            creature.x = x;
+            creature.y = y;
             creature.tentacles.forEach(t => {
                 t.base.x = creature.x;
                 t.base.y = creature.y;
@@ -164,6 +170,13 @@
                 let color = colors[Math.floor(Math.random() * colors.length)];
                 particles.push(new Particle(creature.x, creature.y, Math.random() * 4 + 2, color));
             }
+        }
+
+        canvas.addEventListener("mousemove", (e) => moveCreature(e.clientX, e.clientY));
+        canvas.addEventListener("touchmove", (e) => {
+            e.preventDefault();
+            let touch = e.touches[0];
+            moveCreature(touch.clientX, touch.clientY);
         });
 
         animate();
